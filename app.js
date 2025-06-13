@@ -1,6 +1,7 @@
+// Inicialización explícita de Supabase
 const supabaseUrl = 'https://ypdcxfkdwywgemwzkcso.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlwZGN4Zmtkd3l3Z2Vtd3prY3NvIiwicm9sZSI0NjQyLCJpYXQiOjE3NDk2MTE0NTYsImV4cCI6MjA2NTE4NzQ1Nn0.jhzSlskDmNa0y-I-u6vi80tT6D3UKpZ18tTGLGJMTfA';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+const supabase = window.supabase ? window.supabase : window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let medidasTemporales = [];
 let temporadaActual = null;
@@ -163,7 +164,7 @@ function renderMedidas(medidas) {
         const div = document.createElement('div');
         div.innerHTML = `
             <label>${medida}</label>
-            <input type="number" id="medida_${medida.replace(/\s/g, '_')}" placeholder="${medida}">
+            <input type="number" id="medida_${medida.replace(/\s/g, '_')}" placeholder="${medida}" required>
         `;
         medidasContainer.appendChild(div);
     });
@@ -201,11 +202,13 @@ document.getElementById('clientForm').addEventListener('submit', async function 
             medidas[medida] = document.getElementById(`medida_${medida.replace(/\s/g, '_')}`)?.value;
         });
     }
-    // Validar que las medidas no estén vacías o undefined
+    // Validar que todas las medidas tengan un valor numérico
     for (let key in medidas) {
-        if (medidas[key] === undefined || medidas[key] === '') {
-            medidas[key] = null; // Convertir a null para evitar errores
+        const value = medidas[key];
+        if (value === undefined || value === '' || isNaN(value)) {
+            return mostrarMensaje(`La medida ${key.replace(/_/g, ' ')} debe ser un número válido`, 'error');
         }
+        medidas[key] = Number(value); // Convertir a número
     }
     await guardarCliente(medidas, estado);
 });
@@ -215,24 +218,28 @@ async function guardarCliente(medidas, estado) {
     if (!celular.match(/^\d{8}$/)) return mostrarMensaje('El número debe tener 8 dígitos', 'error');
     celular = `506${celular}`;
     const cliente = {
-        nombre: document.getElementById('nombre').value,
+        nombre: document.getElementById('nombre').value.trim(),
         celular,
         sexo: document.getElementById('sexo').value,
         tipo_prenda: document.getElementById('tipoPrenda').value,
         temporada: document.getElementById('temporadaSelect').value,
         estado,
         medidas,
-        observaciones: document.getElementById('observaciones').value
+        observaciones: document.getElementById('observaciones').value.trim()
     };
+    console.log('Datos enviados a Supabase:', JSON.stringify(cliente, null, 2)); // Depuración detallada
     const { error } = await supabase.from('clientes').insert([cliente]).then(response => {
         if (error) {
-            console.error('Error detallado:', error);
+            console.error('Error detallado de Supabase:', error);
             mostrarMensaje('Error al guardar cliente: ' + (error.message || 'Ver consola para detalles'), 'error');
         } else {
             limpiarFormulario();
             mostrarMensaje('Cliente guardado con éxito', 'exito');
             mostrarSeccion('menuPrincipal');
         }
+    }).catch(err => {
+        console.error('Error en la promesa:', err);
+        mostrarMensaje('Error inesperado al guardar cliente', 'error');
     });
 }
 
@@ -444,6 +451,7 @@ async function eliminarPrenda(nombre) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('Supabase inicializado con URL:', supabaseUrl);
     cargarTiposPrenda();
     cargarTemporadas();
     mostrarSeccion('menuPrincipal');
