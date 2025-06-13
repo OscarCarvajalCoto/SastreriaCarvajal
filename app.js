@@ -1,5 +1,5 @@
-const supabaseUrl = 'https://ypdcxfkdwywgemwzkcso.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlwZGN4Zmtkd3l3Z2Vtd3prY3NvIiwicm9sZSI0NjQyLCJpYXQiOjE3NDk2MTE0NTYsImV4cCI6MjA2NTE4NzQ1Nn0.jhzSlskDmNa0y-I-u6vi80tT6D3UKpZ18tTGLGJMTfA';
+const supabaseUrl = 'https://qrhgqgvxaydfctptyljt.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyaGdxZ3Z4YXlkZmN0cHR5bGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3NzMwNTUsImV4cCI6MjA2NTM0OTA1NX0.fvFzTYNODizIK_mtf2ZM5hriOKG2LcJjKhM_b_Kus_U';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let medidasTemporales = [];
