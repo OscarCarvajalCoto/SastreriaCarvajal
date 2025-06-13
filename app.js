@@ -1,5 +1,5 @@
-const supabaseUrl = 'https://qrhgqgvxaydfctptyljt.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyaGdxZ3Z4YXlkZmN0cHR5bGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3NzMwNTUsImV4cCI6MjA2NTM0OTA1NX0.fvFzTYNODizIK_mtf2ZM5hriOKG2LcJjKhM_b_Kus_U';
+const supabaseUrl = 'https://ypdcxfkdwywgemwzkcso.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlwZGN4Zmtkd3l3Z2Vtd3prY3NvIiwicm9sZSI0NjQyLCJpYXQiOjE3NDk2MTE0NTYsImV4cCI6MjA2NTE4NzQ1Nn0.jhzSlskDmNa0y-I-u6vi80tT6D3UKpZ18tTGLGJMTfA';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let medidasTemporales = [];
@@ -33,7 +33,7 @@ function limpiarFormulario() {
 
 async function cargarTiposPrenda() {
     const { data: tipos, error } = await supabase.from('tipos_prenda').select('nombre');
-    if (error) return mostrarMensaje('Error al cargar tipos de prenda', 'error');
+    if (error) return mostrarMensaje('Error al cargar tipos de prenda: ' + error.message, 'error');
     const tipoPrendaSelect = document.getElementById('tipoPrenda');
     tipoPrendaSelect.innerHTML = `
         <option value="Pantalones">Pantalones</option>
@@ -92,9 +92,9 @@ async function agregarTemporada() {
 async function eliminarTemporada(nombre) {
     if (!confirm(`¿Eliminar ${nombre}? Esto eliminará todos los clientes asociados.`)) return;
     const { error: errorClientes } = await supabase.from('clientes').delete().eq('temporada', nombre);
-    if (errorClientes) return mostrarMensaje('Error al eliminar clientes de la temporada', 'error');
+    if (errorClientes) return mostrarMensaje('Error al eliminar clientes de la temporada: ' + error.message, 'error');
     const { error } = await supabase.from('temporadas').delete().eq('nombre', nombre);
-    if (error) return mostrarMensaje('Error al eliminar temporada', 'error');
+    if (error) return mostrarMensaje('Error al eliminar temporada: ' + error.message, 'error');
     cargarTemporadas();
     mostrarMensaje('Temporada eliminada', 'exito');
 }
@@ -152,7 +152,7 @@ async function mostrarMedidas() {
         renderMedidas(medidas);
     } else {
         const { data: tipo, error } = await supabase.from('tipos_prenda').select('medidas').eq('nombre', tipoPrenda).single();
-        if (error) return mostrarMensaje('Error al cargar medidas', 'error');
+        if (error) return mostrarMensaje('Error al cargar medidas: ' + error.message, 'error');
         if (tipo) renderMedidas(tipo.medidas);
     }
 }
@@ -196,10 +196,16 @@ document.getElementById('clientForm').addEventListener('submit', async function 
         };
     } else {
         const { data: tipo, error } = await supabase.from('tipos_prenda').select('medidas').eq('nombre', tipoPrenda).single();
-        if (error) return mostrarMensaje('Error al cargar medidas', 'error');
+        if (error) return mostrarMensaje('Error al cargar medidas: ' + error.message, 'error');
         tipo.medidas.forEach(medida => {
             medidas[medida] = document.getElementById(`medida_${medida.replace(/\s/g, '_')}`)?.value;
         });
+    }
+    // Validar que las medidas no estén vacías o undefined
+    for (let key in medidas) {
+        if (medidas[key] === undefined || medidas[key] === '') {
+            medidas[key] = null; // Convertir a null para evitar errores
+        }
     }
     await guardarCliente(medidas, estado);
 });
@@ -218,11 +224,16 @@ async function guardarCliente(medidas, estado) {
         medidas,
         observaciones: document.getElementById('observaciones').value
     };
-    const { error } = await supabase.from('clientes').insert([cliente]);
-    if (error) return mostrarMensaje('Error al guardar cliente: ' + error.message, 'error');
-    limpiarFormulario();
-    mostrarMensaje('Cliente guardado con éxito', 'exito');
-    mostrarSeccion('menuPrincipal');
+    const { error } = await supabase.from('clientes').insert([cliente]).then(response => {
+        if (error) {
+            console.error('Error detallado:', error);
+            mostrarMensaje('Error al guardar cliente: ' + (error.message || 'Ver consola para detalles'), 'error');
+        } else {
+            limpiarFormulario();
+            mostrarMensaje('Cliente guardado con éxito', 'exito');
+            mostrarSeccion('menuPrincipal');
+        }
+    });
 }
 
 async function mostrarClientesTemporada(filtroNombre = '', filtroSexo = '', filtroEstado = '') {
@@ -239,7 +250,7 @@ async function mostrarClientesTemporada(filtroNombre = '', filtroSexo = '', filt
     if (filtroSexo) query = query.eq('sexo', filtroSexo);
     if (filtroEstado) query = query.eq('estado', filtroEstado);
     const { data: clientes, error } = await query;
-    if (error) return mostrarMensaje('Error al cargar clientes', 'error');
+    if (error) return mostrarMensaje('Error al cargar clientes: ' + error.message, 'error');
     const clientesTemporada = document.getElementById('clientesTemporada');
     clientesTemporada.innerHTML = '';
     const prendas = [...new Set(clientes.map(cliente => cliente.tipo_prenda))];
@@ -289,7 +300,7 @@ async function buscarClientes(filtroNombre = '', filtroCelular = '') {
         .select('*')
         .ilike('nombre', `%${filtroNombre}%`)
         .ilike('celular', `%${filtroCelular}%`);
-    if (error) return mostrarMensaje('Error al cargar clientes', 'error');
+    if (error) return mostrarMensaje('Error al cargar clientes: ' + error.message, 'error');
     const clientesLista = document.getElementById('clientesLista');
     clientesLista.innerHTML = '';
     if (clientes.length === 0) {
@@ -345,7 +356,7 @@ async function editarCliente(id) {
         .select('*')
         .eq('id', id)
         .single();
-    if (error) return mostrarMensaje('Error al cargar cliente', 'error');
+    if (error) return mostrarMensaje('Error al cargar cliente: ' + error.message, 'error');
     document.getElementById('nombre').value = cliente.nombre;
     document.getElementById('celular').value = cliente.celular.replace(/^506/, '');
     document.getElementById('sexo').value = cliente.sexo;
@@ -370,7 +381,7 @@ async function editarCliente(id) {
 async function eliminarCliente(id) {
     if (!confirm('¿Eliminar este cliente?')) return;
     const { error } = await supabase.from('clientes').delete().eq('id', id);
-    if (error) return mostrarMensaje('Error al eliminar cliente', 'error');
+    if (error) return mostrarMensaje('Error al eliminar cliente: ' + error.message, 'error');
     mostrarClientesTemporada();
     buscarClientes(
         document.getElementById('buscarNombreCliente')?.value || '',
@@ -381,7 +392,7 @@ async function eliminarCliente(id) {
 
 async function cargarPrendas() {
     const { data: prendas, error } = await supabase.from('tipos_prenda').select('nombre, medidas');
-    if (error) return mostrarMensaje('Error al cargar prendas', 'error');
+    if (error) return mostrarMensaje('Error al cargar prendas: ' + error.message, 'error');
     const prendasList = document.getElementById('prendasList');
     prendasList.innerHTML = '';
     prendas.forEach(prenda => {
@@ -402,7 +413,7 @@ async function editarPrenda(nombre) {
         .select('nombre, medidas')
         .eq('nombre', nombre)
         .single();
-    if (error) return mostrarMensaje('Error al cargar prenda', 'error');
+    if (error) return mostrarMensaje('Error al cargar prenda: ' + error.message, 'error');
     document.getElementById('nuevoTipoPrenda').value = prenda.nombre;
     medidasTemporales = [...prenda.medidas];
     const medidasList = document.getElementById('medidasList');
@@ -484,7 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .from('clientes')
                 .select('*')
                 .eq('temporada', temporadaActual);
-            if (error) return mostrarMensaje('Error al exportar datos', 'error');
+            if (error) return mostrarMensaje('Error al exportar datos: ' + error.message, 'error');
             let csvContent = 'Nombre,Celular,Sexo,TipoPrenda,Temporada,Estado,';
             const todasMedidas = new Set();
             clientes.forEach(cliente => {
@@ -512,7 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function exportarTodoCSV() {
     const { data: clientes, error } = await supabase.from('clientes').select('*');
-    if (error) return mostrarMensaje('Error al exportar todos los datos', 'error');
+    if (error) return mostrarMensaje('Error al exportar todos los datos: ' + error.message, 'error');
     let csvContent = 'Nombre,Celular,Sexo,TipoPrenda,Temporada,Estado,';
     const todasMedidas = new Set();
     clientes.forEach(cliente => {
