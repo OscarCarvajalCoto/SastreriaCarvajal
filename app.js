@@ -1,4 +1,4 @@
-// Forzar inicialización de Supabase
+// Forzar inicialización de Supabase y eliminar instancias previas
 delete window.supabase;
 const supabaseUrl = 'https://qrhgqgvxaydfctptyljt.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyaGdxZ3Z4YXlkZmN0cHR5bGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3NzMwNTUsImV4cCI6MjA2NTM0OTA1NX0.fvFzTYNODizIK_mtf2ZM5hriOKG2LcJjKhM_b_Kus_U';
@@ -229,6 +229,7 @@ async function guardarCliente(medidas, estado) {
         observaciones: document.getElementById('observaciones').value.trim()
     };
     console.log('Datos enviados a Supabase:', JSON.stringify(cliente, null, 2));
+    console.log('Encabezados de la solicitud:', supabase.auth.getSession()); // Depurar autenticación
     const { data, error } = await supabase.from('clientes').insert([cliente]);
     if (error) {
         console.error('Error detallado de Supabase:', error);
@@ -448,7 +449,7 @@ async function eliminarPrenda(nombre) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Supabase inicializado con URL:', supabaseUrl);
+    console.log('Supabase inicializado con URL:', supabaseUrl, 'y clave:', supabaseKey);
     cargarTiposPrenda();
     cargarTemporadas();
     mostrarSeccion('menuPrincipal');
@@ -550,4 +551,4 @@ async function exportarTodoCSV() {
     a.click();
     URL.revokeObjectURL(url);
     mostrarMensaje('Todos los datos a CSV', 'exito');
-}p
+}
