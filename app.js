@@ -1,7 +1,8 @@
-// Inicialización explícita de Supabase
+// Forzar inicialización de Supabase
+delete window.supabase;
 const supabaseUrl = 'https://ypdcxfkdwywgemwzkcso.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlwZGN4Zmtkd3l3Z2Vtd3prY3NvIiwicm9sZSI0NjQyLCJpYXQiOjE3NDk2MTE0NTYsImV4cCI6MjA2NTE4NzQ1Nn0.jhzSlskDmNa0y-I-u6vi80tT6D3UKpZ18tTGLGJMTfA';
-const supabase = window.supabase ? window.supabase : window.supabase.createClient(supabaseUrl, supabaseKey);
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let medidasTemporales = [];
 let temporadaActual = null;
@@ -202,13 +203,13 @@ document.getElementById('clientForm').addEventListener('submit', async function 
             medidas[medida] = document.getElementById(`medida_${medida.replace(/\s/g, '_')}`)?.value;
         });
     }
-    // Validar que todas las medidas tengan un valor numérico
+    // Validar y convertir medidas a números
     for (let key in medidas) {
         const value = medidas[key];
         if (value === undefined || value === '' || isNaN(value)) {
             return mostrarMensaje(`La medida ${key.replace(/_/g, ' ')} debe ser un número válido`, 'error');
         }
-        medidas[key] = Number(value); // Convertir a número
+        medidas[key] = Number(value);
     }
     await guardarCliente(medidas, estado);
 });
@@ -227,20 +228,16 @@ async function guardarCliente(medidas, estado) {
         medidas,
         observaciones: document.getElementById('observaciones').value.trim()
     };
-    console.log('Datos enviados a Supabase:', JSON.stringify(cliente, null, 2)); // Depuración detallada
-    const { error } = await supabase.from('clientes').insert([cliente]).then(response => {
-        if (error) {
-            console.error('Error detallado de Supabase:', error);
-            mostrarMensaje('Error al guardar cliente: ' + (error.message || 'Ver consola para detalles'), 'error');
-        } else {
-            limpiarFormulario();
-            mostrarMensaje('Cliente guardado con éxito', 'exito');
-            mostrarSeccion('menuPrincipal');
-        }
-    }).catch(err => {
-        console.error('Error en la promesa:', err);
-        mostrarMensaje('Error inesperado al guardar cliente', 'error');
-    });
+    console.log('Datos enviados a Supabase:', JSON.stringify(cliente, null, 2));
+    const { data, error } = await supabase.from('clientes').insert([cliente]);
+    if (error) {
+        console.error('Error detallado de Supabase:', error);
+        mostrarMensaje('Error al guardar cliente: ' + (error.message || 'Ver consola para detalles'), 'error');
+    } else {
+        limpiarFormulario();
+        mostrarMensaje('Cliente guardado con éxito', 'exito');
+        mostrarSeccion('menuPrincipal');
+    }
 }
 
 async function mostrarClientesTemporada(filtroNombre = '', filtroSexo = '', filtroEstado = '') {
@@ -553,4 +550,4 @@ async function exportarTodoCSV() {
     a.click();
     URL.revokeObjectURL(url);
     mostrarMensaje('Todos los datos a CSV', 'exito');
-}
+}p
