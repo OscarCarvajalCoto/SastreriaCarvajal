@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Sastrería Carvajal</title>
+    <link rel="stylesheet" href="/SastreriaCarvajal/styles.css">
+    <link rel="manifest" href="/SastreriaCarvajal/manifest.json">
+    <meta name="theme-color" content="#2196F3">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<!-- Actualizado 11/06/2025 -->
+<body>
+    <div class="container">
+        <h1><i class="fas fa-scissors"></i> Gestión de Sastrería</h1>
+        <div id="mensaje" class="mensaje hidden"></div>
+        <div id="menuPrincipal" class="section">
+            <h2>Menú Principal</h2>
+            <button onclick="mostrarSeccion('temporadas')"><i class="fas fa-calendar"></i> Ver Temporadas</button>
+            <button onclick="mostrarSeccion('crearPrenda')"><i class="fas fa-tshirt"></i> Crear Tipo de Prenda</button>
+            <button onclick="mostrarSeccion('verPrendas')"><i class="fas fa-tshirt"></i> Ver Prendas</button>
+            <button onclick="mostrarSeccion('registrarCliente')"><i class="fas fa-user-plus"></i> Registrar Cliente</button>
+            <button onclick="mostrarSeccion('verClientes')"><i class="fas fa-users"></i> Ver Clientes</button>
+            <button onclick="exportarTodoCSV()"><i class="fas fa-file-csv"></i> Exportar Todo a CSV</button>
+        </div>
+        <div id="temporadas" class="section hidden">
+            <h2><i class="fas fa-calendar"></i> Temporadas</h2>
+            <input type="text" id="nuevaTemporada" placeholder="Ej: Temporada Escolar 2026">
+            <button onclick="agregarTemporada()"><i class="fas fa-plus"></i> Agregar Temporada</button>
+            <div id="temporadasList"></div>
+            <button onclick="mostrarSeccion('menuPrincipal')"><i class="fas fa-arrow-left"></i> Volver</button>
+        </div>
+        <div id="detalleTemporada" class="section hidden">
+            <h2 id="temporadaNombre"></h2>
+            <div class="search-container">
+                <input type="text" id="buscarNombre" placeholder="Buscar por nombre">
+                <select id="filtroSexo">
+                    <option value="">Todos</option>
+                    <option value="Hombre">Hombre</option>
+                    <option value="Mujer">Mujer</option>
+                </select>
+                <select id="filtroEstado">
+                    <option value="">Todos los Estados</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Cortado">Cortado</option>
+                    <option value="Listo">Listo</option>
+                    <option value="Retirado">Retirado</option>
+                </select>
+                <button id="exportarBtn"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+            </div>
+            <h3>Prendas y Clientes</h3>
+            <div id="clientesTemporada"></div>
+            <button onclick="mostrarSeccion('temporadas')"><i class="fas fa-arrow-left"></i> Volver a Temporadas</button>
+        </div>
+        <div id="crearPrenda" class="section hidden">
+            <h2><i class="fas fa-tshirt"></i> Crear Tipo de Prenda</h2>
+            <input type="text" id="nuevoTipoPrenda" placeholder="Nombre del tipo de prenda">
+            <input type="text" id="nuevaMedida" placeholder="Nueva medida (ej: Largo)">
+            <button onclick="agregarMedida()"><i class="fas fa-plus"></i> Agregar Medida</button>
+            <ul id="medidasList"></ul>
+            <button onclick="guardarTipoPrenda()"><i class="fas fa-save"></i> Guardar Tipo de Prenda</button>
+            <button onclick="mostrarSeccion('menuPrincipal')"><i class="fas fa-arrow-left"></i> Volver</button>
+        </div>
+        <div id="verPrendas" class="section hidden">
+            <h2><i class="fas fa-tshirt"></i> Ver Prendas</h2>
+            <div id="prendasList"></div>
+            <button onclick="mostrarSeccion('menuPrincipal')"><i class="fas fa-arrow-left"></i> Volver</button>
+        </div>
+        <div id="registrarCliente" class="section hidden">
+            <h2><i class="fas fa-user-plus"></i> Registrar Cliente</h2>
+            <form id="clientForm">
+                <label>Nombre Completo</label>
+                <input type="text" id="nombre" required>
+                <label>Número de Celular</label>
+                <div class="phone-container">
+                    <span class="phone-prefix">506</span>
+                    <input type="text" id="celular" pattern="\d{8}" maxlength="8" placeholder="Ej: 12345678" required>
+                </div>
+                <label>Sexo</label>
+                <select id="sexo" required>
+                    <option value="Hombre">Hombre</option>
+                    <option value="Mujer">Mujer</option>
+                </select>
+                <label>Temporada</label>
+                <select id="temporadaSelect" required></select>
+                <label>Tipo de Prenda</label>
+                <select id="tipoPrenda" onchange="mostrarMedidas()">
+                    <option value="Pantalones">Pantalones</option>
+                    <option value="Camisas">Camisas</option>
+                </select>
+                <label>Estado del Encargo</label>
+                <select id="estado">
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Cortado">Cortado</option>
+                    <option value="Listo">Listo</option>
+                    <option value="Retirado">Retirado</option>
+                </select>
+                <div id="medidasContainer"></div>
+                <label>Observaciones</label>
+                <textarea id="observaciones"></textarea>
+                <div class="form-buttons">
+                    <button type="submit"><i class="fas fa-save"></i> Guardar</button>
+                    <button type="button" onclick="limpiarFormulario()"><i class="fas fa-eraser"></i> Limpiar</button>
+                </div>
+            </form>
+            <button onclick="mostrarSeccion('menuPrincipal')"><i class="fas fa-arrow-left"></i> Volver</button>
+        </div>
+        <div id="verClientes" class="section hidden">
+            <h2><i class="fas fa-users"></i> Ver Clientes</h2>
+            <div class="search-container">
+                <input type="text" id="buscarNombreCliente" placeholder="Buscar por nombre">
+                <input type="text" id="buscarCelular" placeholder="Buscar por número de celular">
+            </div>
+            <h3>Resultados</h3>
+            <div id="clientesLista"></div>
+            <button onclick="mostrarSeccion('menuPrincipal')"><i class="fas fa-arrow-left"></i> Volver</button>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+    <script src="/SastreriaCarvajal/app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/SastreriaCarvajal/service-worker.js')
+                .then(() => console.log('Service Worker registrado'))
+                .catch(error => console.error('Error al registrar Service Worker:', error));
+        }
+    </script>
+</body>
+</html>
